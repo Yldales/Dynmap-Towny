@@ -4,5 +4,5 @@ version: "${project.version}"
 author: LlmDl
 api-version: 1.14
 depend: [ dynmap, Towny ]
-softdepend: [ TownyChat ]
+softdepend: [ TownyChat, PlaceholderAPI ]
 

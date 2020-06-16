@@ -12,9 +12,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.palmergames.bukkit.towny.TownyEconomyHandler;
-import com.palmergames.bukkit.towny.TownyFormatter;
-import com.palmergames.bukkit.towny.TownySettings;
+import com.palmergames.bukkit.towny.*;
+import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -37,15 +36,12 @@ import org.dynmap.markers.MarkerIcon;
 import org.dynmap.markers.MarkerSet;
 import org.dynmap.markers.PlayerSet;
 
-import com.palmergames.bukkit.towny.Towny;
-import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.object.Coord;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownBlock;
 import com.palmergames.bukkit.towny.object.TownBlockType;
-import com.palmergames.bukkit.towny.TownyUniverse;
 import com.palmergames.bukkit.towny.exceptions.EconomyException;
 import com.palmergames.bukkit.towny.object.TownyWorld;
 
@@ -54,6 +50,8 @@ import com.palmergames.bukkit.TownyChat.Chat;
 public class DynmapTownyPlugin extends JavaPlugin {
     private static Logger log;
     private static final String DEF_INFOWINDOW = "<div class=\"infowindow\"><span style=\"font-size:120%;\">%regionname% (%nation%)</span><br /> Mayor <span style=\"font-weight:bold;\">%playerowners%</span><br /> Associates <span style=\"font-weight:bold;\">%playermanagers%</span><br/>Flags<br /><span style=\"font-weight:bold;\">%flags%</span></div>";
+    private static final String DEF_INFOWINDOW_TOWN = "";
+    private static final String DEF_INFOWINDOW_CAPITAL = "";
     private static final String NATION_NONE = "_none_";
     Plugin dynmap;
     DynmapAPI api;
@@ -75,6 +73,8 @@ public class DynmapTownyPlugin extends JavaPlugin {
     long updperiod;
     boolean use3d;
     String infowindow;
+    String infowindow_town;
+    String infowindow_capital;
     AreaStyle defstyle;
     Map<String, AreaStyle> cusstyle;
     Map<String, AreaStyle> nationstyle;
@@ -441,6 +441,99 @@ public class DynmapTownyPlugin extends JavaPlugin {
     
     private Map<String, AreaMarker> resareas = new HashMap<String, AreaMarker>();
     private Map<String, Marker> resmark = new HashMap<String, Marker>();
+
+    private String formatInfoWindowWIP(Town town, TownBlockType townBlockType) {
+        HashMap<String, Object> placeholders = new HashMap<>();
+        String htmlOutput = "";
+
+        // Get the infowindow regarding of the town type (Classic Town, or Capital).
+        if(!town.isCapital()) {
+            htmlOutput = infowindow_town;
+        } else {
+            htmlOutput = infowindow_capital;
+        }
+
+        // -------------------------------------------------------------------------------------------------------------
+        // PLACEHOLDERS
+        // -------------------------------------------------------------------------------------------------------------
+        placeholders.put("%town_name%", town.getName());
+        placeholders.put("%town_name_formatted%", town.getFormattedName());
+        placeholders.put("%town_tag%", town.getTag());
+        placeholders.put("%town_tag_override%", town.getTag().isEmpty() ? town.getName() : town.getTag());
+
+        // Town meta.
+        placeholders.put("%town_founded%", town.getRegistered() != 0 ? TownyFormatter.registeredFormat.format(town.getRegistered()) : "Not set");
+        placeholders.put("%town_board%", town.getTownBoard());
+
+        // Town residents.
+        List<String> town_residents = new ArrayList<String>();
+        for(Resident resident: town.getResidents()) {
+            town_residents.add(resident.getName());
+        }
+        placeholders.put("%town_residents%", String.join(", ", town_residents));
+        placeholders.put("%town_residents_count%", town.getNumResidents());
+
+        // Town assistants.
+        List<String> town_assistants = new ArrayList<String>();
+        for(Resident resident: town.getAssistants()) {
+            town_assistants.add(resident.getName());
+        }
+        placeholders.put("%town_assistants%", String.join(", ", town_assistants));
+        placeholders.put("%town_assistants_count%", town_assistants.size());
+
+        // Town flags.
+        placeholders.put("%town_flag_upkeep%", town.hasUpkeep());
+        placeholders.put("%town_flag_pvp%", town.isPVP());
+        placeholders.put("%town_flag_mobs%", town.hasMobs());
+        placeholders.put("%town_flag_public%", town.isPublic());
+        placeholders.put("%town_flag_explosions%", town.isBANG());
+        placeholders.put("%town_flag_fire%", town.isFire());
+
+        // townBlockType can be null.
+        placeholders.put("%townblock_type%", townBlockType == null ? "Default" : townBlockType.toString());
+
+        // If Town is inside a Nation, allow nation-related placeholders.
+        if(town.hasNation()) {
+            try {
+                placeholders.put("%nation%", town.getNation().getName());
+                placeholders.put("%nation_formatted%", town.getNation().getFormattedName());
+                placeholders.put("%nation_tag%", town.getNation().getTag());
+                placeholders.put("%nation_tag_override%", town.getNation().getTag().isEmpty() ? town.getNation().getName() : town.getNation().getTag());
+                placeholders.put("%nation_king_title%", town.getNation().getKing().getTitle());
+                placeholders.put("%nation_king_surname%", town.getNation().getKing().getSurname());
+                placeholders.put("%nation_status", town.isCapital() ? "Capital of" : "Member of");
+            } catch (NotRegisteredException e) {
+            }
+        } else {
+            // TODO: Find a better way to set all nation-related placeholders to "" if the town don't have a nation.
+            placeholders.put("%nation%", "");
+            placeholders.put("%nation_formatted%", "");
+            placeholders.put("%nation_tag%", "");
+            placeholders.put("%nation_tag_override%", "");
+            placeholders.put("%nation_king_title%", "");
+            placeholders.put("%nation_king_surname%", "");
+            placeholders.put("%nation_status", "");
+        }
+
+        // If town has an economy account, allow economy-related placeholders.
+        if(town.getAccount() != null) {
+            try {
+                placeholders.put("%town_balance%", town.getAccount().getHoldingBalance());
+            } catch (EconomyException e) {
+            }
+        } else {
+            // TODO: Find a better way to set all economy-related placeholders to "" if the town don't have an account.
+            placeholders.put("%town_balance%", "");
+        }
+
+        // Apply placeholders.
+        // TODO: Check performances of this operation and optimize ?
+        for(Map.Entry<String, Object> placeholder: placeholders.entrySet()) {
+            htmlOutput = htmlOutput.replace(placeholder.getKey(), placeholder.getValue().toString());
+        }
+
+        return htmlOutput;
+    }
     
     private String formatInfoWindow(Town town, TownBlockType btype) {
         String v = "<div class=\"regioninfo\">"+infowindow+"</div>";
@@ -489,7 +582,7 @@ public class DynmapTownyPlugin extends JavaPlugin {
         }
 
        	v = v.replace("%bank%", townBankBalanceCache.containsKey(town) ? TownyEconomyHandler.getFormattedBalance(townBankBalanceCache.get(town)) : "Accounts loading...");
-        
+
         String nation = "";
 		try {
 			if(town.hasNation())
@@ -521,7 +614,7 @@ public class DynmapTownyPlugin extends JavaPlugin {
 
         return v;
     }
-    
+
     private boolean isVisible(String id, String worldname) {
         if((visible != null) && (visible.size() > 0)) {
             if((visible.contains(id) == false) && (visible.contains("world:" + worldname) == false)) {
@@ -534,7 +627,7 @@ public class DynmapTownyPlugin extends JavaPlugin {
         }
         return true;
     }
-        
+
     private void addStyle(Town town, String resid, String natid, AreaMarker m, TownBlockType btype) {
         AreaStyle as = cusstyle.get(resid);	/* Look up custom style for town, if any */
         AreaStyle ns = nationstyle.get(natid);	/* Look up nation style, if any */
@@ -632,7 +725,8 @@ public class DynmapTownyPlugin extends JavaPlugin {
     	if(blocks.isEmpty())
     	    return;
         /* Build popup */
-        String desc = formatInfoWindow(town, btype);
+        // String desc = formatInfoWindow(town, btype);
+        String desc = formatInfoWindowWIP(town, btype);
 
     	HashMap<String, TileFlags> blkmaps = new HashMap<String, TileFlags>();
         LinkedList<TownBlock> nodevals = new LinkedList<TownBlock>();
@@ -1032,7 +1126,12 @@ public class DynmapTownyPlugin extends JavaPlugin {
         set.setLayerPriority(cfg.getInt("layer.layerprio", 10));
         set.setHideByDefault(cfg.getBoolean("layer.hidebydefault", false));
         use3d = cfg.getBoolean("use3dregions", false);
+
+        /* */
         infowindow = cfg.getString("infowindow", DEF_INFOWINDOW);
+        infowindow_town = cfg.getString("infowindows.town", DEF_INFOWINDOW_TOWN);
+        infowindow_capital = cfg.getString("infowindows.capital", DEF_INFOWINDOW_CAPITAL);
+
         /* See if we need to show commercial areas */
         show_shops = cfg.getBoolean("layer.showShops", false);
         show_arenas = cfg.getBoolean("layer.showArenas", false);
