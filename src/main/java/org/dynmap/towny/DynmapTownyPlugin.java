@@ -1129,8 +1129,8 @@ public class DynmapTownyPlugin extends JavaPlugin {
 
         /* */
         infowindow = cfg.getString("infowindow", DEF_INFOWINDOW);
-        infowindow_town = cfg.getString("infowindows.town", DEF_INFOWINDOW_TOWN);
-        infowindow_capital = cfg.getString("infowindows.capital", DEF_INFOWINDOW_CAPITAL);
+        infowindow_town = cfg.get("infowindows.town").toString();
+        infowindow_capital = cfg.get("infowindows.capital").toString();
 
         /* See if we need to show commercial areas */
         show_shops = cfg.getBoolean("layer.showShops", false);

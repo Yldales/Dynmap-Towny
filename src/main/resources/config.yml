@@ -31,7 +31,79 @@ dynamic-nation-colors: true
 
 # Format for popup - substitute values for macros
 infowindow: '<div class="infowindow"><span style="font-size:120%;">%regionname% (%nation%)</span><br /> Mayor <span style="font-weight:bold;">%playerowners%</span><br /> Associates <span style="font-weight:bold;">%playermanagers%</span><br/>Flags<br /><span style="font-weight:bold;">%flags%</span></div>'
-
+infowindows:
+  town: |
+    <hr>
+    TOWN
+    <hr>
+    <div style="">town_name: %town_name%</div>
+    <div style="">town_name_formatted: %town_name_formatted%</div>
+    <div style="">town_tag: %town_tag%</div>
+    <div style="">town_tag_override: %town_tag_override%</div>
+    <hr>
+    <div style="">town_founded: %town_founded%</div>
+    <div style="">town_board: %town_board%</div>
+    <hr>
+    <div style="">town_residents: %town_residents%</div>
+    <div style="">town_residents_count: %town_residents_count%</div>
+    <hr>
+    <div style="">town_assistants: %town_assistants%</div>
+    <div style="">town_assistants_count: %town_assistants_count%</div>
+    <hr>
+    <div style="">town_flag_upkeep: %town_flag_upkeep%</div>
+    <div style="">town_flag_pvp: %town_flag_pvp%</div>
+    <div style="">town_flag_mobs: %town_flag_mobs%</div>
+    <div style="">town_flag_public: %town_flag_public%</div>
+    <div style="">town_flag_explosions: %town_flag_explosions%</div>
+    <div style="">town_flag_fire: %town_flag_fire%</div>
+    <hr>
+    <div style="">townblock_type: %townblock_type%</div>
+    <hr>
+    <div style="">nation: %nation%</div>
+    <div style="">nation_formatted: %nation_formatted%</div>
+    <div style="">nation_tag: %nation_tag%</div>
+    <div style="">nation_tag_override: %nation_tag_override%</div>
+    <div style="">nation_king_title: %nation_king_title%</div>
+    <div style="">nation_king_surname: %nation_king_surname%</div>
+    <div style="">nation_status: %nation_status%</div>
+    <hr>
+    <div style="">town_balance: %town_balance%</div>
+  capital: |
+    <hr>
+    CAPITAL
+    <hr>
+    <div style="">town_name: %town_name%</div>
+    <div style="">town_name_formatted: %town_name_formatted%</div>
+    <div style="">town_tag: %town_tag%</div>
+    <div style="">town_tag_override: %town_tag_override%</div>
+    <hr>
+    <div style="">town_founded: %town_founded%</div>
+    <div style="">town_board: %town_board%</div>
+    <hr>
+    <div style="">town_residents: %town_residents%</div>
+    <div style="">town_residents_count: %town_residents_count%</div>
+    <hr>
+    <div style="">town_assistants: %town_assistants%</div>
+    <div style="">town_assistants_count: %town_assistants_count%</div>
+    <hr>
+    <div style="">town_flag_upkeep: %town_flag_upkeep%</div>
+    <div style="">town_flag_pvp: %town_flag_pvp%</div>
+    <div style="">town_flag_mobs: %town_flag_mobs%</div>
+    <div style="">town_flag_public: %town_flag_public%</div>
+    <div style="">town_flag_explosions: %town_flag_explosions%</div>
+    <div style="">town_flag_fire: %town_flag_fire%</div>
+    <hr>
+    <div style="">townblock_type: %townblock_type%</div>
+    <hr>
+    <div style="">nation: %nation%</div>
+    <div style="">nation_formatted: %nation_formatted%</div>
+    <div style="">nation_tag: %nation_tag%</div>
+    <div style="">nation_tag_override: %nation_tag_override%</div>
+    <div style="">nation_king_title: %nation_king_title%</div>
+    <div style="">nation_king_surname: %nation_king_surname%</div>
+    <div style="">nation_status: %nation_status%</div>
+    <hr>
+    <div style="">town_balance: %town_balance%</div>
 regionstyle:
   strokeColor: "#FF0000"
   strokeOpacity: 0.8
